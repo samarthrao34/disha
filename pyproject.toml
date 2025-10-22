@@ -1,0 +1,15 @@
+[project]
+name = "disha"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "deepface>=0.0.95",
+    "fer>=22.5.1",
+    "opencv-python>=4.11.0.86",
+    "tf-keras>=2.20.1",
+    "torch>=2.9.0",
+    "torchvision>=0.24.0",
+    "transformers>=4.57.1",
+]
