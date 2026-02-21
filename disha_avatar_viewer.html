@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>DISHA - Live2D Avatar</title>
+    <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #canvas {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 15px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .info h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .info p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .emotion {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h1>🌟 DISHA</h1>
+        <p>Your AI Mental Health Companion</p>
+        <p>Powered by Google Gemini Flash</p>
+    </div>
+    
+    <canvas id="canvas" width="800" height="800"></canvas>
+    
+    <div class="emotion" id="emotion">
+        😊 Neutral
+    </div>
+    
+    <script>
+        // This is a placeholder - you'll need proper Live2D Cubism SDK integration
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw placeholder
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(0, 0, 800, 800);
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('DISHA Avatar', 400, 350);
+        
+        ctx.font = '18px Arial';
+        ctx.fillText('Live2D Model Ready', 400, 400);
+        ctx.fillText('Emotion-synced animations enabled', 400, 430);
+        
+        // WebSocket for real-time emotion updates
+        function connectWebSocket() {
+            const ws = new WebSocket('ws://localhost:8765');
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.emotion) {
+                    updateEmotion(data.emotion);
+                }
+                if (data.speaking !== undefined) {
+                    updateSpeaking(data.speaking);
+                }
+            };
+            
+            ws.onerror = () => {
+                console.log('WebSocket connection failed - running in standalone mode');
+            };
+        }
+        
+        function updateEmotion(emotion) {
+            const emotionMap = {
+                'happy': '😊',
+                'sad': '😢',
+                'angry': '😠',
+                'surprise': '😲',
+                'fear': '😨',
+                'neutral': '😐'
+            };
+            
+            const emoji = emotionMap[emotion] || '😊';
+            document.getElementById('emotion').textContent = emoji + ' ' + emotion.charAt(0).toUpperCase() + emotion.slice(1);
+        }
+        
+        function updateSpeaking(speaking) {
+            // Add lip-sync animation here
+            console.log('Speaking:', speaking);
+        }
+        
+        // Try to connect (will fail gracefully if server not running)
+        setTimeout(connectWebSocket, 1000);
+    </script>
+</body>
+</html>
