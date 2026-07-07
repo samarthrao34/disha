@@ -1,5 +1,6 @@
 torch
 torchvision
+<<<<<<< HEAD
 torchaudio
 transformers
 datasets
@@ -15,3 +16,12 @@ onnxruntime
 pytest
 pyyaml
 tqdm
+=======
+numpy
+pandas
+scikit-learn
+matplotlib
+Pillow
+tqdm
+pytest
+>>>>>>> gitlab/face-module
