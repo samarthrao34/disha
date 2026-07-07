@@ -1,0 +1,17 @@
+torch
+torchvision
+torchaudio
+transformers
+datasets
+scikit-learn
+numpy
+pandas
+matplotlib
+opencv-python
+librosa
+soundfile
+onnx
+onnxruntime
+pytest
+pyyaml
+tqdm

@@ -1,0 +1,12 @@
+experiment_name: face_resnet18_fer2013
+dataset:
+  name: FER2013
+  source: "verify official/source before training"
+model:
+  name: resnet18
+training:
+  seed: 42
+  batch_size: 64
+  epochs: null
+evaluation:
+  metrics: [accuracy, macro_f1, weighted_f1, ece, latency_ms, model_size_mb]

@@ -1,0 +1,4 @@
+sutra:
+  version: v3
+  mode: conservative_scaffold
+  note: "All thresholds are placeholders until calibration."

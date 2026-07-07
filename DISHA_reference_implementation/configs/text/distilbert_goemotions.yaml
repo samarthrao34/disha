@@ -1,0 +1,7 @@
+experiment_name: text_distilbert_goemotions
+dataset:
+  name: GoEmotions
+model:
+  name: distilbert-base-uncased
+evaluation:
+  metrics: [accuracy, macro_f1, weighted_f1, ece, latency_ms, model_size_mb]

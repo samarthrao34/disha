@@ -1,0 +1,7 @@
+experiment_name: speech_mfcc_svm_ravdess
+dataset:
+  name: RAVDESS
+model:
+  name: mfcc_svm
+evaluation:
+  metrics: [accuracy, macro_f1, weighted_f1, ece, latency_ms]
