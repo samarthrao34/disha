@@ -1,0 +1,23 @@
+{
+  "dataset": "fer2013",
+  "model": "resnet18",
+  "checkpoint": "checkpoints\\face_resnet18_fer2013.pt",
+  "num_test_samples": 7178,
+  "num_params": 11180103,
+  "class_names": [
+    "angry",
+    "disgust",
+    "fear",
+    "happy",
+    "neutral",
+    "sad",
+    "surprise"
+  ],
+  "accuracy": 0.6649484536082474,
+  "macro_f1": 0.6557246613228308,
+  "weighted_f1": 0.6683676388683881,
+  "ece": 0.19069625512409022,
+  "ece_bins": 15,
+  "avg_latency_ms_per_image": 5.859158000093885,
+  "device": "cuda"
+}
