@@ -55,9 +55,9 @@ def build_face_evidence(
         model_name: Identifier of the producing model.
         availability: Whether the face modality was available for this sample.
         reliability: Optional externally supplied reliability score in [0, 1].
-            If None, a simple heuristic (1 - normalized entropy) is used.
-            This heuristic is a placeholder and is NOT a validated
-            calibration-based reliability estimate.
+            If None, reliability defaults to 1.0 when available and 0.0 when unavailable.
+            Real reliability estimates should come from the face input-quality module,
+            not from prediction entropy.
         timestamp: ISO-8601 timestamp; defaults to current UTC time.
 
     Returns:
@@ -77,7 +77,7 @@ def build_face_evidence(
     entropy_nats = float(entropy_from_probs(probs, normalize=False))
 
     if reliability is None:
-        reliability = 1.0 - entropy_norm
+        reliability = 1.0 if availability else 0.0
 
     evidence = FaceEvidence(
         modality="face",
