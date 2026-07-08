@@ -3,9 +3,12 @@
 Usage:
     python -m src.face.evaluate --data-dir data/raw/fer2013
 
-Reports accuracy, macro-F1, weighted-F1, ECE, and average per-image
-inference latency, then writes them to
-``experiments/face_resnet18_fer2013_metrics.json``.
+Reports accuracy, macro-F1, weighted-F1, ECE (uncalibrated and, when a
+learned temperature exists, calibrated), and average per-image inference
+latency. Writes:
+    experiments/face_resnet18_fer2013_metrics.json
+    experiments/face_resnet18_fer2013_confusion_matrix.png
+    experiments/face_resnet18_fer2013_classification_report.json
 All numbers come from the actual evaluation run.
 """
 
@@ -14,18 +17,35 @@ import json
 import os
 import time
 
+import matplotlib
+
+matplotlib.use("Agg")  # headless-safe backend; must precede pyplot import
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+)
 from tqdm import tqdm
 
 from .calibration import expected_calibration_error
 from .dataset import get_face_dataloaders
 from .model import create_resnet18_face_model
+from .temperature_scaling import apply_temperature
 
 DEFAULT_CHECKPOINT = os.path.join("checkpoints", "face_resnet18_fer2013.pt")
+TEMPERATURE_PATH = os.path.join("checkpoints", "face_resnet18_temperature.pt")
 METRICS_PATH = os.path.join("experiments", "face_resnet18_fer2013_metrics.json")
+CONFUSION_MATRIX_PATH = os.path.join(
+    "experiments", "face_resnet18_fer2013_confusion_matrix.png"
+)
+CLASSIFICATION_REPORT_PATH = os.path.join(
+    "experiments", "face_resnet18_fer2013_classification_report.json"
+)
 
 
 def measure_latency(model, loader, device, n_samples: int = 100, n_warmup: int = 10) -> float:
@@ -54,6 +74,50 @@ def measure_latency(model, loader, device, n_samples: int = 100, n_warmup: int =
             if idx >= n_warmup:
                 timings.append(elapsed)
     return float(np.mean(timings) * 1000.0)
+
+
+def load_temperature(path: str = TEMPERATURE_PATH):
+    """Load the learned temperature if it exists, else return None."""
+    if not os.path.isfile(path):
+        return None
+    payload = torch.load(path, map_location="cpu")
+    if isinstance(payload, dict):
+        return float(payload["temperature"])
+    return float(payload)
+
+
+def save_confusion_matrix_plot(cm: np.ndarray, class_names, path: str) -> None:
+    """Render and save a confusion matrix heatmap with matplotlib only."""
+    fig, ax = plt.subplots(figsize=(8, 7))
+    im = ax.imshow(cm, interpolation="nearest", cmap="Blues")
+    fig.colorbar(im, ax=ax)
+
+    n = len(class_names)
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(class_names, rotation=45, ha="right")
+    ax.set_yticklabels(class_names)
+    ax.set_xlabel("Predicted label")
+    ax.set_ylabel("True label")
+    ax.set_title("FER2013 test confusion matrix (ResNet-18)")
+
+    # Annotate each cell with its count, switching text color for contrast.
+    threshold = cm.max() / 2.0 if cm.max() > 0 else 0.5
+    for i in range(n):
+        for j in range(n):
+            ax.text(
+                j,
+                i,
+                f"{cm[i, j]:d}",
+                ha="center",
+                va="center",
+                color="white" if cm[i, j] > threshold else "black",
+                fontsize=8,
+            )
+
+    fig.tight_layout()
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
 
 
 def main() -> None:
@@ -89,26 +153,53 @@ def main() -> None:
         seed=args.seed,
     )
 
-    all_probs, all_labels = [], []
+    all_logits, all_labels = [], []
     with torch.no_grad():
         for images, labels in tqdm(test_loader, desc="Evaluating"):
             images = images.to(device)
-            logits = model(images)
-            probs = F.softmax(logits, dim=1)
-            all_probs.append(probs.cpu().numpy())
-            all_labels.append(labels.numpy())
+            all_logits.append(model(images).cpu())
+            all_labels.append(labels)
 
-    probs = np.concatenate(all_probs)
-    labels = np.concatenate(all_labels)
+    logits = torch.cat(all_logits, dim=0)
+    labels = torch.cat(all_labels, dim=0).numpy()
+
+    probs = F.softmax(logits, dim=1).numpy()
     preds = probs.argmax(axis=1)
 
     accuracy = float(accuracy_score(labels, preds))
     macro_f1 = float(f1_score(labels, preds, average="macro"))
     weighted_f1 = float(f1_score(labels, preds, average="weighted"))
-    ece = expected_calibration_error(probs, labels, n_bins=args.ece_bins)
+    ece_uncalibrated = expected_calibration_error(probs, labels, n_bins=args.ece_bins)
+
+    # Calibrated ECE: only if a learned temperature checkpoint exists.
+    temperature = load_temperature()
+    ece_calibrated = None
+    if temperature is not None:
+        calibrated_probs = F.softmax(apply_temperature(logits, temperature), dim=1).numpy()
+        ece_calibrated = expected_calibration_error(
+            calibrated_probs, labels, n_bins=args.ece_bins
+        )
+        print(f"[evaluate] Loaded temperature {temperature:.6f} from {TEMPERATURE_PATH}")
+    else:
+        print(
+            f"[evaluate] No temperature file at {TEMPERATURE_PATH}; "
+            "skipping calibrated ECE. Run src.face.temperature_scaling first."
+        )
 
     print("[evaluate] Measuring per-image latency...")
     latency_ms = measure_latency(model, test_loader, device)
+
+    # Confusion matrix and per-class classification report.
+    cm = confusion_matrix(labels, preds)
+    report = classification_report(
+        labels, preds, target_names=class_names, output_dict=True, zero_division=0
+    )
+
+    os.makedirs(os.path.dirname(METRICS_PATH), exist_ok=True)
+
+    save_confusion_matrix_plot(cm, class_names, CONFUSION_MATRIX_PATH)
+    with open(CLASSIFICATION_REPORT_PATH, "w", encoding="utf-8") as fh:
+        json.dump(report, fh, indent=2)
 
     metrics = {
         "dataset": "fer2013",
@@ -120,23 +211,28 @@ def main() -> None:
         "accuracy": accuracy,
         "macro_f1": macro_f1,
         "weighted_f1": weighted_f1,
-        "ece": ece,
+        "ece_uncalibrated": ece_uncalibrated,
+        "ece_calibrated": ece_calibrated,
         "ece_bins": args.ece_bins,
-        "avg_latency_ms_per_image": latency_ms,
+        "latency_ms_per_image": latency_ms,
+        "temperature": temperature,
         "device": str(device),
     }
 
-    os.makedirs(os.path.dirname(METRICS_PATH), exist_ok=True)
     with open(METRICS_PATH, "w", encoding="utf-8") as fh:
         json.dump(metrics, fh, indent=2)
 
     print("\n[evaluate] Results (FER2013 test set):")
-    print(f"  Accuracy          : {accuracy:.4f}")
-    print(f"  Macro-F1          : {macro_f1:.4f}")
-    print(f"  Weighted-F1       : {weighted_f1:.4f}")
-    print(f"  ECE ({args.ece_bins} bins)     : {ece:.4f}")
-    print(f"  Latency per image : {latency_ms:.2f} ms ({device})")
+    print(f"  Accuracy            : {accuracy:.4f}")
+    print(f"  Macro-F1            : {macro_f1:.4f}")
+    print(f"  Weighted-F1         : {weighted_f1:.4f}")
+    print(f"  ECE uncalibrated    : {ece_uncalibrated:.4f} ({args.ece_bins} bins)")
+    if ece_calibrated is not None:
+        print(f"  ECE calibrated      : {ece_calibrated:.4f} (T={temperature:.4f})")
+    print(f"  Latency per image   : {latency_ms:.2f} ms ({device})")
     print(f"\n[evaluate] Metrics saved to {METRICS_PATH}")
+    print(f"[evaluate] Confusion matrix saved to {CONFUSION_MATRIX_PATH}")
+    print(f"[evaluate] Classification report saved to {CLASSIFICATION_REPORT_PATH}")
 
 
 if __name__ == "__main__":
