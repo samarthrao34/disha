@@ -8,3 +8,4 @@ All entries must correspond to real runs. Do not record results that were not pr
 | ---- | ------ | ------- | ----- | ------ | --- | -------- | --- | ------- | ----- |
 | 2026-07-08 | pending | FER2013 | ResNet-18 | 11.18M | 0.6649 | 0.6557 | 0.1907 | 5.86 ms | Initial face module baseline (CUDA) |
 Temperature scaling applied, T=2.385616
+| 2026-07-08 | <commit> | FER2013 | ResNet-18 + temperature scaling | see metrics JSON | 0.6649 | 0.6557 | 0.1907 → 0.0162 | 5.12 ms cuda | Temperature scaling applied, T=2.385616 |
