@@ -1,0 +1,32 @@
+{
+  "benchmark": "integrated_demo_latency",
+  "accuracy_claim": null,
+  "accuracy_note": "No aligned multimodal ground-truth dataset was evaluated.",
+  "samples_per_iteration": {
+    "text": 1,
+    "face": 1,
+    "speech": 1
+  },
+  "iterations": 20,
+  "cold_start_ms": 26344.44859999985,
+  "warm_latency_mean_ms": 68.45456999997168,
+  "warm_latency_median_ms": 66.29730000008749,
+  "warm_latency_p95_ms": 76.2033999999403,
+  "warm_latency_min_ms": 61.91669999998339,
+  "warm_latency_max_ms": 79.24259999981587,
+  "modalities_used": [
+    "text",
+    "face",
+    "speech"
+  ],
+  "final_demo_fused_probabilities": {
+    "angry": 0.011454212368671455,
+    "disgust": 0.0014374643421159608,
+    "fear": 0.004391981995288847,
+    "happy": 0.9273701969269353,
+    "neutral": 0.015153325067619298,
+    "sad": 0.011855322560706403,
+    "surprise": 0.02833749576526091
+  },
+  "hardware": "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+}

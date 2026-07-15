@@ -1,0 +1,32 @@
+{
+  "experiment": "text_goemotions_tfidf_sgd",
+  "dataset": "GoEmotions simplified",
+  "source": "https://github.com/google-research/google-research/tree/master/goemotions",
+  "license": "CC BY 4.0 (dataset repository statement)",
+  "train_samples": 43410,
+  "dev_samples": 5426,
+  "test_samples": 5427,
+  "num_labels": 28,
+  "multi_label": true,
+  "model": "TF-IDF (1-2 grams) + one-vs-rest SGD logistic loss",
+  "vocabulary_size": 58340,
+  "decision_threshold": 0.5500000000000002,
+  "dev_threshold_micro_f1": 0.5205479452054794,
+  "training_seconds": 17.961545200000046,
+  "latency_ms_per_text": 14.327474600000187,
+  "model_size_mb": 12.432419776916504,
+  "test_metrics": {
+    "subset_accuracy": 0.3193292795282845,
+    "micro_precision": 0.45176552042464807,
+    "micro_recall": 0.6185811344604203,
+    "micro_f1": 0.5221740580193398,
+    "macro_f1": 0.45005231933878237,
+    "hamming_loss": 0.04715180710205586
+  },
+  "sha256": {
+    "train.tsv": "1c254a142be5c00e80d819b9ae1bbd36d94b2eeb8f4b1271846508d57e57d9c5",
+    "dev.tsv": "575489c079c9de1097062a01738f998590d6b7ead66dd1c9fd1d2ba01fd8bc62",
+    "test.tsv": "0587b2dd8b27b97352adbfc3fb083d46005c8946657fdc2b1ca8b1cc7f1f8be4",
+    "emotions.txt": "45c3ef86782d2a4d7fedcd6d8c111aa0d0e94720689bd164fac94fefb4495a89"
+  }
+}

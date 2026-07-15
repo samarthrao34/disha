@@ -1,0 +1,93 @@
+{
+  "experiment": "text_meld_tfidf_logreg",
+  "dataset": "MELD official splits",
+  "source": "https://github.com/declare-lab/MELD",
+  "samples": {
+    "train": 9989,
+    "dev": 1109,
+    "test": 2610
+  },
+  "labels": [
+    "angry",
+    "disgust",
+    "fear",
+    "happy",
+    "neutral",
+    "sad",
+    "surprise"
+  ],
+  "selection_metric": "development macro-F1",
+  "selected_hyperparameters": {
+    "c": 1.0,
+    "class_weight": "balanced",
+    "macro_f1": 0.37571306463374793,
+    "weighted_f1": 0.5027384507828521
+  },
+  "candidate_results": [
+    {
+      "c": 0.5,
+      "class_weight": null,
+      "macro_f1": 0.292287415223334,
+      "weighted_f1": 0.4640493753477563
+    },
+    {
+      "c": 0.5,
+      "class_weight": "balanced",
+      "macro_f1": 0.37362792063345174,
+      "weighted_f1": 0.4944471928635106
+    },
+    {
+      "c": 1.0,
+      "class_weight": null,
+      "macro_f1": 0.32813574563811043,
+      "weighted_f1": 0.4925755001837345
+    },
+    {
+      "c": 1.0,
+      "class_weight": "balanced",
+      "macro_f1": 0.37571306463374793,
+      "weighted_f1": 0.5027384507828521
+    },
+    {
+      "c": 2.0,
+      "class_weight": null,
+      "macro_f1": 0.34094618030519097,
+      "weighted_f1": 0.5041128743390975
+    },
+    {
+      "c": 2.0,
+      "class_weight": "balanced",
+      "macro_f1": 0.36940687187186244,
+      "weighted_f1": 0.5015740726618999
+    }
+  ],
+  "test_metrics": {
+    "accuracy": 0.5,
+    "macro_f1": 0.370288695718678,
+    "weighted_f1": 0.5161299030932663,
+    "negative_log_likelihood": 1.382572146125191,
+    "ece_15_bin": 0.069370272377813,
+    "accuracy_dialogue_bootstrap_ci": {
+      "estimate": 0.5,
+      "ci_95_low": 0.47889965019546143,
+      "ci_95_high": 0.5205029963815007,
+      "bootstrap_iterations": 1000,
+      "cluster_count": 280
+    },
+    "macro_f1_dialogue_bootstrap_ci": {
+      "estimate": 0.370288695718678,
+      "ci_95_low": 0.3480090166465876,
+      "ci_95_high": 0.3918678663072412,
+      "bootstrap_iterations": 1000,
+      "cluster_count": 280
+    }
+  },
+  "majority_test_accuracy": 0.4812260536398467,
+  "training_and_selection_seconds": 40.30238650000001,
+  "checkpoint_size_mb": 2.650580406188965,
+  "sha256": {
+    "train": "d2fa2d6529cf03cac2989efec05c9b27d8fd2f4c8fc5974c7ae88aa537fa02db",
+    "dev": "2e89c6f8aa182d6f62f8c6331aece905ac7273ca4999660bfb5213e1d0370c1c",
+    "test": "8d37103938f7067600839fe29d5a114a6cd1bcdafb75bec101e06464c5006888"
+  }
+}

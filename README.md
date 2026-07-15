@@ -1,107 +1,120 @@
-<<<<<<< HEAD
 # DISHA Reference Implementation
 
-Reference implementation scaffold for DISHA, a safety-governed multimodal emotional-support research framework.
+DISHA is a safety-governed multimodal emotional-support research framework.
+The repository is an early research implementation, not a therapist, medical
+device, diagnostic system, or production crisis service.
 
-This scaffold contains no trained models, no benchmark claims, and no fabricated results.
+## Current status
 
-## Rules
+- A FER2013 face-emotion baseline has been trained and evaluated with a
+  ResNet-18 backbone.
+- Face probabilities can be temperature-scaled and converted into the
+  canonical `EvidenceObject` used by SUTRA.
+- A trained GoEmotions text baseline provides a runnable
+  text-to-SUTRA-to-response path.
+- A conversational MELD text model is selected on the official development
+  split and evaluated once on the official test split with dialogue-clustered
+  confidence intervals.
+- A speaker-independent RAVDESS speech baseline converts WAV files into
+  canonical evidence using MFCC statistics and an RBF SVM.
+- A Tkinter application supports files, live webcam capture, four-second
+  microphone recording, conservative SUTRA fusion, session trends,
+  safety-policy overrides, and sanitized JSON report export.
+- SUTRA performs conservative evidence fusion and selects bounded response
+  actions.
+- Safety policy can override normal actions when explicit crisis indicators
+  are present.
+- Aligned multimodal accuracy evaluation, qualified human evaluation,
+  persistent consent-aware storage, and production safety validation remain
+  future work.
+
+## Research rules
+
 1. No result without an executed experiment.
-2. No threshold without calibration.
+2. No threshold without clearly marking whether it is calibrated or a
+   conservative research default.
 3. No clinical or diagnostic claims.
-4. SUTRA receives structured Evidence Objects only, not raw image/audio/text.
-=======
-# DISHA
+4. SUTRA receives structured Evidence Objects, never raw image, audio, or text.
+5. Crisis-risk signals are kept separate from ordinary emotion labels.
 
+See [docs/NO_FAKE_RESULTS_POLICY.md](docs/NO_FAKE_RESULTS_POLICY.md) and
+[docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 
+## Setup
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/disha4473228/disha.git
-git branch -M main
-git push -uf origin main
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-## Integrate with your tools
+## Run tests
 
-* [Set up project integrations](https://gitlab.com/disha4473228/disha/-/settings/integrations)
+```powershell
+python -m pytest -q
+```
 
-## Collaborate with your team
+## Run the text integration baseline
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```powershell
+$env:PYTHONPATH="src"
+python -m disha.runtime --text "I had a difficult day at work"
+```
 
-## Test and Deploy
+The command returns the bounded response, selected SUTRA action, safety
+decision, and sanitized evidence metadata.
 
-Use the built-in continuous integration in GitLab.
+## Run the professor demo
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+Double-click `RUN_DEMO.bat`, or run:
 
-***
+```powershell
+$env:PYTHONPATH="src"
+.\.venv\Scripts\python.exe demo_app.py
+```
 
-# Editing this README
+The first multimodal analysis may take about 30 seconds to load all models.
+The measured warm mean was 68.45 ms over 20 runs on the local RTX 3050 laptop.
+See `PROFESSOR_DEMO_GUIDE.md` for the exact presentation sequence and
+`output/pdf/DISHA_Genuine_Research_Paper.pdf` for the evidence-backed paper.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The private repository includes the trained checkpoints required by the demo.
+Raw datasets and temporary captures are intentionally excluded. Checkpoint
+hashes, training sources, and limitations are recorded in
+`MODEL_ARTIFACTS.md`.
 
-## Suggestions for a good README
+## Face experiment
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The FER2013 dataset is expected at:
 
-## Name
-Choose a self-explaining name for your project.
+```text
+data/raw/fer2013/train/<class>/*.jpg
+data/raw/fer2013/test/<class>/*.jpg
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Train and evaluate:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```powershell
+python -m src.face.train --data-dir data/raw/fer2013 --model-name resnet18 --epochs 15
+python -m src.face.temperature_scaling --data-dir data/raw/fer2013
+python -m src.face.evaluate --data-dir data/raw/fer2013 --model-name resnet18
+python -m src.face.test_evidence_real --data-dir data/raw/fer2013 --index 0
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Dataset provenance, licensing, and checksums must be verified and recorded
+before publishing or reproducing any experiment.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Architecture
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```text
+modality input
+  -> modality model
+  -> quality and uncertainty assessment
+  -> canonical EvidenceObject (no raw input)
+  -> SUTRA conservative fusion and action selection
+  -> safety-policy override
+  -> bounded response renderer
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
->>>>>>> gitlab/face-module
+Operational thresholds, crisis behavior, and response quality require
+dedicated validation before use with real users.

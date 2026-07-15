@@ -1,0 +1,111 @@
+{
+  "experiment": "speech_ravdess_mfcc_svm",
+  "dataset": "RAVDESS Audio Speech Actors 01-24",
+  "source": "https://zenodo.org/records/1188976",
+  "license": "CC BY-NC-SA 4.0",
+  "archive_md5": "bc696df654c87fed845eb13823edef8a",
+  "samples": 1440,
+  "actors": 24,
+  "classes": [
+    "angry",
+    "calm",
+    "disgust",
+    "fearful",
+    "happy",
+    "neutral",
+    "sad",
+    "surprised"
+  ],
+  "evaluation": "6-fold speaker-independent GroupKFold (actors never cross folds)",
+  "model": "MFCC statistics + StandardScaler + RBF SVM",
+  "feature_dimensions": 240,
+  "feature_extraction_seconds": 164.87117560000002,
+  "cross_validation_seconds": 4.496669200000042,
+  "accuracy": 0.4895833333333333,
+  "macro_f1": 0.4680435689039993,
+  "weighted_f1": 0.4856583630942023,
+  "latency_ms_per_file": 32.420119000000795,
+  "model_size_mb": 1.5733842849731445,
+  "confusion_matrix": [
+    [
+      115,
+      1,
+      24,
+      13,
+      14,
+      4,
+      5,
+      16
+    ],
+    [
+      0,
+      116,
+      7,
+      12,
+      9,
+      9,
+      39,
+      0
+    ],
+    [
+      32,
+      16,
+      96,
+      4,
+      7,
+      6,
+      20,
+      11
+    ],
+    [
+      8,
+      11,
+      7,
+      108,
+      26,
+      4,
+      18,
+      10
+    ],
+    [
+      16,
+      2,
+      7,
+      38,
+      95,
+      11,
+      13,
+      10
+    ],
+    [
+      5,
+      19,
+      6,
+      10,
+      23,
+      16,
+      15,
+      2
+    ],
+    [
+      6,
+      46,
+      15,
+      18,
+      20,
+      11,
+      64,
+      12
+    ],
+    [
+      21,
+      3,
+      16,
+      22,
+      20,
+      0,
+      15,
+      95
+    ]
+  ]
+}

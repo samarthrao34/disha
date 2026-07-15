@@ -14,9 +14,12 @@ import json
 import os
 import sys
 
+import cv2
 import torch
 import torch.nn.functional as F
 from torchvision import datasets
+
+from disha.face.reliability import assess_face_quality
 
 from .dataset import build_eval_transform
 from .evidence import build_face_evidence
@@ -28,13 +31,15 @@ TEMPERATURE_PATH = os.path.join("checkpoints", "face_resnet18_temperature.pt")
 
 EXPECTED_KEYS = {
     "modality",
-    "emotion_probs",
+    "emotion_probabilities",
     "predicted_emotion",
-    "confidence",
-    "entropy",
-    "reliability",
-    "availability",
+    "calibrated_confidence",
+    "predictive_entropy",
+    "reliability_score",
+    "reliability_status",
+    "availability_status",
     "timestamp",
+    "quality_metadata",
     "model_name",
 }
 
@@ -61,7 +66,7 @@ def verify_no_raw_image_data(evidence: dict) -> None:
         "probs + metadata, may contain raw data"
     )
 
-    probs = evidence["emotion_probs"]
+    probs = evidence["emotion_probabilities"]
     assert isinstance(probs, dict), "emotion_probs must be a dict"
     assert all(isinstance(v, float) for v in probs.values()), (
         "emotion_probs values must be plain floats"
@@ -102,6 +107,7 @@ def main() -> None:
             f"--index {args.index} out of range for test set of size {len(test_dataset)}"
         )
     image, label = test_dataset[args.index]
+    source_path = test_dataset.samples[args.index][0]
     true_label = test_dataset.classes[label]
     print(f"[evidence-test] Sample index {args.index}, true label: {true_label}")
 
@@ -120,12 +126,21 @@ def main() -> None:
 
     probs = F.softmax(logits, dim=1).squeeze(0).cpu().numpy()
 
-    evidence = build_face_evidence(
+    source_image = cv2.imread(source_path)
+    if source_image is None:
+        raise RuntimeError(f"Could not read source image for quality assessment: {source_path}")
+    # FER2013 images are already face crops, so detection coverage is implicit.
+    quality = assess_face_quality(source_image, assume_cropped_face=True)
+
+    evidence_object = build_face_evidence(
         probs=probs,
         class_names=test_dataset.classes,
         model_name="resnet18_fer2013",
+        calibrated=temperature is not None,
         availability=True,
+        quality_assessment=quality,
     )
+    evidence = evidence_object.to_dict()
 
     print("\n[evidence-test] Face Evidence Object:")
     print(json.dumps(evidence, indent=2))

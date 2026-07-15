@@ -7,9 +7,11 @@ scikit-learn
 numpy
 pandas
 matplotlib
-opencv-python
+opencv-python==4.10.0.84
 librosa
 soundfile
+sounddevice>=0.5,<1
+imageio-ffmpeg>=0.6,<1
 onnx
 onnxruntime
 pytest

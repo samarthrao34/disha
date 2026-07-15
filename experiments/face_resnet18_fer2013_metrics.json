@@ -1,9 +1,10 @@
 {
   "dataset": "fer2013",
   "model": "resnet18",
-  "checkpoint": "checkpoints/face_resnet18_fer2013.pt",
+  "checkpoint": "checkpoints\\face_resnet18_fer2013.pt",
   "num_test_samples": 7178,
   "num_params": 11180103,
+  "trainable_params": 11180103,
   "class_names": [
     "angry",
     "disgust",
@@ -19,7 +20,7 @@
   "ece_uncalibrated": 0.19069625589011535,
   "ece_calibrated": 0.016191122665748056,
   "ece_bins": 15,
-  "latency_ms_per_image": 5.117982001393102,
+  "latency_ms_per_image": 8.287436998798512,
   "temperature": 2.385615587234497,
   "device": "cuda"
 }
