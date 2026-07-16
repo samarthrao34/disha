@@ -5,6 +5,7 @@ EvidenceObject instances or exported session reports.
 """
 
 from pathlib import Path
+import platform
 import time
 
 import cv2
@@ -21,7 +22,8 @@ def capture_webcam_frame(
 ) -> Path:
     target = Path(output_path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    camera = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
+    backend = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_ANY
+    camera = cv2.VideoCapture(camera_index, backend)
     if not camera.isOpened():
         camera.release()
         raise RuntimeError("could not open the webcam")

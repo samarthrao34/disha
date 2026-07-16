@@ -48,7 +48,7 @@ def load_split(data_dir: Path, split: str) -> tuple[pd.DataFrame, np.ndarray]:
     return frame, np.array([LABELS.index(label) for label in labels], dtype=np.int64)
 
 
-def build_pipeline(c: float, class_weight: str | None) -> Pipeline:
+def build_pipeline(c: float, class_weight: str | None, n_jobs: int = 1) -> Pipeline:
     features = FeatureUnion(
         [
             (
@@ -78,6 +78,7 @@ def build_pipeline(c: float, class_weight: str | None) -> Pipeline:
         class_weight=class_weight,
         max_iter=500,
         random_state=42,
+        n_jobs=n_jobs,
     )
     return Pipeline([("vectorizer", features), ("classifier", classifier)])
 
@@ -99,6 +100,7 @@ def main() -> None:
         type=Path,
         default=Path("experiments/text_meld_tfidf_logreg_metrics.json"),
     )
+    parser.add_argument("--n-jobs", type=int, default=1)
     args = parser.parse_args()
 
     train, y_train = load_split(args.data_dir, "train")
@@ -108,7 +110,7 @@ def main() -> None:
     started = time.perf_counter()
     for c in (0.5, 1.0, 2.0):
         for class_weight in (None, "balanced"):
-            model = build_pipeline(c, class_weight)
+            model = build_pipeline(c, class_weight, args.n_jobs)
             model.fit(train["Utterance"].fillna(""), y_train)
             prediction = model.predict(dev["Utterance"].fillna(""))
             candidates.append(

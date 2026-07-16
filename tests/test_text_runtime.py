@@ -27,3 +27,30 @@ def test_direct_crisis_indicator_forces_crisis_action():
     assert result.action == "provide_crisis_resources"
     assert result.safety["reason"] == "crisis_override"
     assert "emergency" in result.response.lower()
+
+
+def test_missing_face_file_degrades_instead_of_blocking_text_result(tmp_path):
+    missing = tmp_path / "missing.jpg"
+    result = DishaEngine().process(
+        text="I feel sad and worried about work today",
+        image_path=str(missing),
+    )
+    assert result.action == "explore"
+    face = next(item for item in result.evidence if item["modality"] == "face")
+    assert face["availability_status"] == "unavailable"
+    assert face["quality_metadata"]["failure_reason"] in {
+        "ValueError",
+        "FileNotFoundError",
+    }
+    assert str(missing) in face["quality_metadata"]["failure_detail"]
+
+
+def test_fail_fast_preserves_modality_exception(tmp_path):
+    missing = tmp_path / "missing.jpg"
+    engine = DishaEngine(continue_on_modality_error=False)
+    try:
+        engine.process(text="hello", image_path=str(missing))
+    except Exception as exc:
+        assert str(missing) in str(exc)
+    else:
+        raise AssertionError("expected missing modality input to raise in fail-fast mode")

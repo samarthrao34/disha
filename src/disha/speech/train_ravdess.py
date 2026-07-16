@@ -67,6 +67,7 @@ def main() -> None:
     parser.add_argument("--cache", default="data/processed/ravdess_mfcc_features.npz")
     parser.add_argument("--output", default="checkpoints/speech_ravdess_mfcc_svm.joblib")
     parser.add_argument("--metrics", default="experiments/speech_ravdess_mfcc_svm_metrics.json")
+    parser.add_argument("--n-jobs", type=int, default=1)
     args = parser.parse_args()
 
     paths = sorted(Path(args.data_dir).rglob("*.wav"))
@@ -89,7 +90,9 @@ def main() -> None:
 
     cv = GroupKFold(n_splits=6)
     benchmark_started = time.perf_counter()
-    predictions = cross_val_predict(build_pipeline(False), x, y, groups=groups, cv=cv)
+    predictions = cross_val_predict(
+        build_pipeline(False), x, y, groups=groups, cv=cv, n_jobs=args.n_jobs
+    )
     benchmark_seconds = time.perf_counter() - benchmark_started
 
     classes = sorted(EMOTIONS.values())

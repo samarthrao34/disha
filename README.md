@@ -54,6 +54,22 @@ pip install -r requirements.txt
 python -m pytest -q
 ```
 
+## Run cloud training
+
+Use the cloud orchestrator when datasets are mounted on a remote GPU/CPU
+instance and you want each available model-training job to use the machine
+more efficiently:
+
+```bash
+export PYTHONPATH=src
+python scripts/run_cloud_training.py --jobs all --n-jobs 8 --num-workers 8
+```
+
+The script skips jobs whose raw datasets are not mounted, forwards parallelism
+settings into the text and speech trainers, and writes
+`experiments/cloud_training_manifest.json` with the exact commands launched.
+Use `--dry-run` first to verify paths without starting training.
+
 ## Run the text integration baseline
 
 ```powershell

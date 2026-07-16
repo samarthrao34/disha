@@ -7,7 +7,7 @@ scikit-learn
 numpy
 pandas
 matplotlib
-opencv-python==4.10.0.84
+opencv-python-headless==4.10.0.84
 librosa
 soundfile
 sounddevice>=0.5,<1

@@ -4,13 +4,20 @@ import argparse
 import json
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 from disha.conversation import render_response
 from disha.emotion_state import EmotionTracker
-from disha.evidence.schema import EvidenceObject
+from disha.evidence.schema import (
+    AvailabilityStatus,
+    EvidenceObject,
+    Modality,
+    ReliabilityStatus,
+)
 from disha.safety.policy import SafetyPolicy
 from disha.sutra.pipeline import SutraReasoner
+
+EMOTIONS = ("angry", "disgust", "fear", "happy", "neutral", "sad", "surprise")
 
 
 @dataclass(frozen=True)
@@ -27,11 +34,57 @@ class DishaResult:
         return asdict(self)
 
 
+def _unavailable_evidence(
+    modality: Modality,
+    *,
+    reason: str,
+    detail: str,
+    timestamp: float | None = None,
+) -> EvidenceObject:
+    uniform = {emotion: 1.0 / len(EMOTIONS) for emotion in EMOTIONS}
+    return EvidenceObject(
+        modality=modality,
+        emotion_probabilities=uniform,
+        calibrated_confidence=None,
+        predictive_entropy=1.0,
+        reliability_score=0.0,
+        reliability_status=ReliabilityStatus.UNUSABLE,
+        availability_status=AvailabilityStatus.UNAVAILABLE,
+        timestamp=time.time() if timestamp is None else timestamp,
+        quality_metadata={
+            "failure_reason": reason,
+            "failure_detail": detail,
+            "thresholds": "research_defaults",
+        },
+        model_name="unavailable_modality_placeholder",
+    )
+
+
 class DishaEngine:
-    def __init__(self) -> None:
+    def __init__(self, *, continue_on_modality_error: bool = True) -> None:
         self.reasoner = SutraReasoner()
         self.safety = SafetyPolicy()
         self.tracker = EmotionTracker()
+        self.continue_on_modality_error = continue_on_modality_error
+
+    def _append_or_placeholder(
+        self,
+        evidence: List[EvidenceObject],
+        modality: Modality,
+        builder: Callable[[], EvidenceObject],
+    ) -> None:
+        try:
+            evidence.append(builder())
+        except Exception as exc:
+            if not self.continue_on_modality_error:
+                raise
+            evidence.append(
+                _unavailable_evidence(
+                    modality,
+                    reason=exc.__class__.__name__,
+                    detail=str(exc),
+                )
+            )
 
     def process(
         self,
@@ -44,13 +97,24 @@ class DishaEngine:
         evidence: List[EvidenceObject] = []
         if text and text.strip():
             from disha.text.evidence import build_text_evidence
+
             evidence.append(build_text_evidence(text))
         if image_path:
             from disha.face.inference import build_face_evidence_from_file
-            evidence.append(build_face_evidence_from_file(image_path))
+
+            self._append_or_placeholder(
+                evidence,
+                Modality.FACE,
+                lambda: build_face_evidence_from_file(image_path),
+            )
         if audio_path:
             from disha.speech.evidence import build_speech_evidence
-            evidence.append(build_speech_evidence(audio_path))
+
+            self._append_or_placeholder(
+                evidence,
+                Modality.SPEECH,
+                lambda: build_speech_evidence(audio_path),
+            )
 
         decision = self.reasoner.decide(evidence)
         crisis_level = str(decision.reasoning_trace.get("crisis_level", "low"))
@@ -79,10 +143,17 @@ def main() -> None:
     parser.add_argument("--text")
     parser.add_argument("--image")
     parser.add_argument("--audio")
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="raise modality errors instead of continuing with unavailable evidence",
+    )
     args = parser.parse_args()
     if not any((args.text, args.image, args.audio)):
         parser.error("provide at least one of --text, --image, or --audio")
-    result = DishaEngine().process(text=args.text, image_path=args.image, audio_path=args.audio)
+    result = DishaEngine(continue_on_modality_error=not args.fail_fast).process(
+        text=args.text, image_path=args.image, audio_path=args.audio
+    )
     print(json.dumps(result.to_dict(), indent=2))
 
 

@@ -67,6 +67,7 @@ def main() -> None:
     parser.add_argument("--output", default="checkpoints/text_goemotions_tfidf_sgd.joblib")
     parser.add_argument("--metrics", default="experiments/text_goemotions_tfidf_sgd_metrics.json")
     parser.add_argument("--max-features", type=int, default=60000)
+    parser.add_argument("--n-jobs", type=int, default=1)
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
@@ -102,7 +103,7 @@ def main() -> None:
             class_weight="balanced",
             random_state=42,
         ),
-        n_jobs=1,
+        n_jobs=args.n_jobs,
     )
     classifier.fit(x_train, y_train)
     training_seconds = time.perf_counter() - started
