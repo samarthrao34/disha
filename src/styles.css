@@ -1,0 +1,195 @@
+:root{
+  /* the aura hue is driven by her read of your emotion — this is the whole "dashboard" */
+  --aura-h: 250;
+  --aura-s: 55%;
+  --aura-l: 26%;
+  --ink:#f2efea;
+  --ink-dim:rgba(242,239,234,.42);
+  --line:rgba(242,239,234,.14);
+  --serif:"Instrument Serif",Georgia,serif;
+  --sans:"Outfit",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:#07070c}
+body{
+  font-family:var(--sans);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── the room: a living aura that breathes and re-tints with emotion ───── */
+.room{position:fixed;inset:0;z-index:0;overflow:hidden;background:#07070c}
+.aura{
+  position:absolute;border-radius:50%;filter:blur(90px);
+  transition:background 2.4s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+.aura.a{
+  width:78vmin;height:78vmin;left:50%;top:46%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,hsl(var(--aura-h) var(--aura-s) var(--aura-l)) 0%,transparent 70%);
+  animation:breathe 9s ease-in-out infinite;
+}
+.aura.b{
+  width:52vmin;height:52vmin;left:26%;top:70%;
+  background:radial-gradient(circle,hsl(calc(var(--aura-h) + 40) 50% 22%) 0%,transparent 70%);
+  animation:breathe 13s ease-in-out infinite reverse;
+}
+.aura.c{
+  width:44vmin;height:44vmin;right:20%;top:22%;
+  background:radial-gradient(circle,hsl(calc(var(--aura-h) - 35) 45% 20%) 0%,transparent 70%);
+  animation:breathe 11s ease-in-out infinite .8s;
+}
+@keyframes breathe{
+  0%,100%{transform:translate(-50%,-50%) scale(1)}
+  50%{transform:translate(-50%,-50%) scale(1.13)}
+}
+.aura.b,.aura.c{animation-name:breatheB}
+@keyframes breatheB{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+
+/* film grain — keeps the flat gradients from looking like a CSS demo */
+.grain{
+  position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.16;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainshift 1.1s steps(3) infinite;
+}
+@keyframes grainshift{
+  0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-2%)}100%{transform:translate(0,0)}
+}
+/* vignette focuses the eye on her */
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 68% 62% at 50% 48%,transparent 40%,rgba(4,4,9,.82) 100%)}
+
+#canvas{position:fixed;inset:0;width:100%;height:100%;z-index:3;display:block}
+
+/* ── camera tile, top ─────────────────────────────────────────────────── */
+.eye{
+  position:fixed;top:22px;left:22px;z-index:6;
+  width:132px;height:99px;border-radius:20px;overflow:hidden;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  display:grid;place-items:center;
+  transition:box-shadow .6s ease,border-color .6s ease,transform .35s cubic-bezier(.34,1.4,.64,1);
+  backdrop-filter:blur(8px);
+}
+.eye:hover{transform:translateY(2px)}
+.eye video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none}
+.eye.live video{display:block}
+.eye .off{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);text-align:center;line-height:1.7;padding:0 12px}
+.eye.live .off{display:none}
+/* the ring pulses only while a face is actually being read — the sole status signal */
+.eye.seeing{
+  border-color:hsl(var(--aura-h) 70% 62% / .55);
+  box-shadow:0 0 0 1px hsl(var(--aura-h) 70% 62% / .25),0 0 28px hsl(var(--aura-h) 70% 55% / .28);
+}
+.eye:focus-visible{outline:2px solid hsl(var(--aura-h) 70% 65%);outline-offset:3px}
+/* a soft flare the moment she actually takes a look at you */
+.eye.look{animation:look .85s cubic-bezier(.2,.7,.3,1)}
+@keyframes look{
+  0%{box-shadow:0 0 0 0 hsl(var(--aura-h) 85% 72% / .75),0 0 30px hsl(var(--aura-h) 80% 60% / .5)}
+  100%{box-shadow:0 0 0 18px hsl(var(--aura-h) 85% 72% / 0),0 0 30px hsl(var(--aura-h) 80% 60% / 0)}
+}
+
+/* ── secondary corner controls: memory + ambient glancing ───────────────── */
+.memory,.ambient{
+  position:fixed;z-index:6;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink-dim);
+  display:grid;place-items:center;backdrop-filter:blur(8px);
+  transition:all .3s ease;
+}
+.memory svg,.ambient svg{width:16px;height:16px;fill:currentColor}
+.memory{top:22px;right:22px}
+.memory:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+.memory.on{color:#fff;background:hsl(var(--aura-h) 62% 52% / .32);border-color:hsl(var(--aura-h) 70% 66% / .5)}
+.memory:focus-visible,.ambient:focus-visible{outline:2px solid hsl(var(--aura-h) 70% 65%);outline-offset:2px}
+
+/* only appears once the camera tile is actually live, tucked just beneath it */
+.ambient{top:132px;left:22px;opacity:0;pointer-events:none;transform:translateY(-4px)}
+.eye.live ~ .ambient{opacity:1;pointer-events:auto;transform:none}
+.ambient:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+.ambient.on{color:#fff;background:hsl(var(--aura-h) 62% 52% / .32);border-color:hsl(var(--aura-h) 70% 66% / .5)}
+.ambient.on svg{animation:pulse2 2.4s ease-in-out infinite}
+@keyframes pulse2{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* ── her voice, as type ───────────────────────────────────────────────── */
+.caption{
+  position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:6;
+  width:min(660px,86vw);text-align:center;
+  font-family:var(--serif);font-size:clamp(19px,2.5vw,27px);line-height:1.42;
+  letter-spacing:.004em;text-wrap:balance;
+  text-shadow:0 2px 30px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.6);
+  opacity:0;transition:opacity 1.1s ease;pointer-events:none;
+}
+.caption.show{opacity:1}
+.caption{cursor:pointer;pointer-events:auto}
+/* a small held dot tells you the caption is pinned and won't fade on its own */
+.caption.pinned::after{
+  content:"";position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);
+  width:6px;height:6px;border-radius:50%;background:hsl(var(--aura-h) 70% 65%);
+  box-shadow:0 0 8px hsl(var(--aura-h) 70% 60% / .7);
+}
+/* shown only when the avatar genuinely can't load — never silently blank */
+.fatal{
+  position:fixed;inset:0;z-index:20;display:none;place-items:center;text-align:center;
+  background:rgba(7,7,12,.93);backdrop-filter:blur(6px);padding:24px;
+}
+.fatal.show{display:grid}
+.fatal h2{font-family:var(--serif);font-size:clamp(22px,3vw,32px);margin:0 0 14px;font-weight:400}
+.fatal p{max-width:46ch;margin:0 auto 10px;font-size:14px;line-height:1.65;color:var(--ink-dim)}
+.fatal code{
+  font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--ink);
+  background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:7px;padding:3px 9px;
+}
+.caption .dots i{font-style:normal;opacity:.3;animation:blip 1.3s infinite}
+.caption .dots i:nth-child(2){animation-delay:.18s}
+.caption .dots i:nth-child(3){animation-delay:.36s}
+@keyframes blip{0%,100%{opacity:.22}50%{opacity:.9}}
+.caption .u{ /* your own line, echoed faintly above hers */
+  display:block;font-family:var(--sans);font-size:12px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-dim);margin-bottom:12px;font-weight:300;
+}
+
+/* ── the one control ──────────────────────────────────────────────────── */
+.bar{
+  position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:7;
+  width:min(560px,88vw);display:flex;align-items:center;gap:4px;
+  padding:7px 7px 7px 20px;border-radius:100px;
+  border:1px solid var(--line);background:rgba(12,12,20,.55);
+  backdrop-filter:blur(20px) saturate(1.2);
+  box-shadow:0 18px 50px rgba(0,0,0,.5);
+  transition:border-color .5s ease,box-shadow .5s ease;
+}
+.bar:focus-within{
+  border-color:hsl(var(--aura-h) 60% 60% / .5);
+  box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 34px hsl(var(--aura-h) 60% 50% / .2);
+}
+.bar input{
+  flex:1;background:none;border:none;outline:none;color:var(--ink);
+  font-family:var(--sans);font-size:15px;font-weight:300;padding:9px 0;
+}
+.bar input::placeholder{color:var(--ink-dim)}
+.mic{
+  flex:none;width:42px;height:42px;border-radius:50%;cursor:pointer;
+  border:1px solid transparent;background:rgba(255,255,255,.05);color:var(--ink-dim);
+  display:grid;place-items:center;transition:all .3s ease;
+}
+.mic:hover{background:rgba(255,255,255,.1);color:var(--ink)}
+.mic svg{width:17px;height:17px;fill:currentColor}
+.mic.on{
+  color:#fff;background:hsl(var(--aura-h) 62% 52% / .32);
+  border-color:hsl(var(--aura-h) 70% 66% / .5);
+  animation:listen 2s ease-in-out infinite;
+}
+@keyframes listen{
+  0%,100%{box-shadow:0 0 0 0 hsl(var(--aura-h) 70% 60% / .34)}
+  50%{box-shadow:0 0 0 9px hsl(var(--aura-h) 70% 60% / 0)}
+}
+/* push-to-talk recording (browsers without live speech recognition) — a
+   faster, redder pulse so it reads as "actively capturing", not idle-listening */
+.mic.recording{
+  color:#fff;background:rgba(255,90,90,.32);border-color:rgba(255,120,120,.6);
+  animation:rec-pulse 1s ease-in-out infinite;
+}
+@keyframes rec-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,.45)}
+  50%{box-shadow:0 0 0 10px rgba(255,90,90,0)}
+}
+.mic:focus-visible{outline:2px solid hsl(var(--aura-h) 70% 65%);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
